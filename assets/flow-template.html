@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문 처리 흐름 예제</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #fff; color: #1e1e1e; font-family: 'Gaegu', 'Apple SD Gothic Neo', sans-serif; overflow: auto; }
+  svg { display: block; }
+  text { font-family: inherit; fill: #1e1e1e; }
+  .halo { paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; }
+  #error { margin: 24px; font: 18px sans-serif; }
+</style>
+</head>
+<body>
+<p id="error" role="alert" hidden></p>
+<noscript>그림을 보려면 JavaScript를 활성화하세요.</noscript>
+<svg id="diagram" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-labelledby="title description" xmlns="http://www.w3.org/2000/svg">
+  <title id="title">주문 처리 흐름</title>
+  <desc id="description">클라이언트 요청을 주문 API가 저장한 뒤 작업 큐로 전달한다. 워커는 외부 서비스에 요청하고 결과를 저장한다. 실패는 재시도 큐로 이동한다. 가상의 설명용 예제다.</desc>
+</svg>
+<script src="https://unpkg.com/roughjs@4.6.6/bundled/rough.js"></script>
+<script>
+'use strict';
+const svg = document.getElementById('diagram');
+const NS = 'http://www.w3.org/2000/svg';
+const C = { black: '#1e1e1e', green: '#2b8a3e', blue: '#1864ab', red: '#c92a2a', gray: '#495057', purple: '#6741d9' };
+const F = { neutral: '#e9ecef', blue: '#dbe4ff', green: '#d3f9d8', red: '#ffe3e3', yellow: '#fff3bf', purple: '#e5dbff' };
+const layers = {};
+for (const name of ['boundaries', 'edges', 'nodes', 'labels']) {
+  layers[name] = document.createElementNS(NS, 'g');
+  svg.appendChild(layers[name]);
+}
+let rc;
+let seed = 1;
+const opts = (extra = {}) => ({ seed: seed++, stroke: C.black, roughness: 1.1, strokeWidth: 2.4, ...extra });
+function add(node, layer = 'nodes') { layers[layer].appendChild(node); }
+function text(x, y, value, o = {}) {
+  const node = document.createElementNS(NS, 'text');
+  for (const [key, val] of Object.entries({ x, y, 'text-anchor': o.anchor || 'middle', 'font-size': o.size || 20 })) node.setAttribute(key, val);
+  if (o.bold) node.setAttribute('font-weight', '700');
+  if (o.color) node.style.fill = o.color;
+  if (o.halo) node.setAttribute('class', 'halo');
+  node.textContent = value;
+  add(node, o.layer || 'labels');
+}
+function label(x, y, value, color = C.black) { text(x, y, value, { size: 18, color, halo: true }); }
+function box(x, y, w, h, title, sub = '', fill = F.neutral) {
+  add(rc.rectangle(x, y, w, h, opts({ fill, fillStyle: 'hachure', hachureGap: 8, fillWeight: 0.7 })));
+  text(x + w / 2, y + h / 2 + (sub ? -4 : 7), title, { bold: true, size: 22, halo: true });
+  if (sub) text(x + w / 2, y + h / 2 + 22, sub, { size: 17, halo: true });
+}
+function table(x, y, w, h, title, sub) {
+  add(rc.rectangle(x, y, w, h, opts({ fill: '#fff', fillStyle: 'solid', strokeWidth: 2 })));
+  text(x + w / 2, y + h / 2 - 3, title, { bold: true, size: 20 });
+  text(x + w / 2, y + h / 2 + 19, sub, { size: 15 });
+}
+function cylinder(x, y, w, h) {
+  const r = 14;
+  add(rc.path(`M ${x} ${y+r} L ${x} ${y+h-r} A ${w/2} ${r} 0 0 0 ${x+w} ${y+h-r} L ${x+w} ${y+r} A ${w/2} ${r} 0 0 0 ${x} ${y+r} Z`, opts({ fill: '#f1f3f5', fillStyle: 'hachure', hachureGap: 9, fillWeight: 0.6 })));
+  add(rc.ellipse(x+w/2, y+r, w, r*2, opts({ fill: '#fff', fillStyle: 'solid' })));
+}
+function boundary(x, y, w, h, title, color = C.gray) {
+  add(rc.rectangle(x, y, w, h, opts({ stroke: color, strokeLineDash: [12, 9], strokeWidth: 2 })), 'boundaries');
+  text(x+16, y+30, title, { anchor: 'start', color, size: 22 });
+}
+function badge(x, y, value) {
+  add(rc.circle(x, y, 34, opts({ fill: '#ffd43b', fillStyle: 'solid', roughness: 0.6, strokeWidth: 2 })));
+  text(x, y+7, value, { bold: true });
+}
+function flow(points, o = {}) {
+  if (points.length < 2) throw new Error('화살표에는 두 점 이상이 필요합니다.');
+  const color = o.color || C.black;
+  add(rc.linearPath(points, opts({ stroke: color, strokeWidth: o.dash ? 2.6 : 3, roughness: 0.5, bowing: 0.4, ...(o.dash ? { strokeLineDash: [11, 7] } : {}) })), 'edges');
+  const head = (p, q) => {
+    if (p[0] === q[0] && p[1] === q[1]) throw new Error('화살촉 구간의 길이는 0보다 커야 합니다.');
+    const a = Math.atan2(p[1]-q[1], p[0]-q[0]);
+    const node = document.createElementNS(NS, 'polygon');
+    node.setAttribute('points', [p, [p[0]-17*Math.cos(a-0.42), p[1]-17*Math.sin(a-0.42)], [p[0]-17*Math.cos(a+0.42), p[1]-17*Math.sin(a+0.42)]].map(v => v.join(',')).join(' '));
+    node.setAttribute('fill', color);
+    add(node, 'edges');
+  };
+  head(points.at(-1), points.at(-2));
+  if (o.both) head(points[0], points[1]);
+}
+function note(y, value) { text(60, y, value, { anchor: 'start', size: 18 }); }
+function scene() {
+  text(60, 45, '주문 처리 흐름', { anchor: 'start', size: 30, bold: true });
+  boundary(470, 80, 650, 700, '주문 서비스', C.red);
+  boundary(1220, 300, 310, 230, '외부 시스템');
+  box(60, 150, 280, 76, '클라이언트', '주문 요청');
+  cylinder(60, 350, 280, 330);
+  text(200, 400, '주문 저장소', { bold: true });
+  table(80, 425, 240, 70, 'orders', '주문 · 처리 상태');
+  table(80, 555, 240, 70, 'order_results', '처리 결과 이력');
+  box(620, 150, 300, 76, '주문 API', '요청 검증 · 주문 생성', F.blue);
+  box(620, 300, 300, 76, '작업 큐', '비동기 처리', F.yellow);
+  box(620, 450, 300, 76, '처리 워커', '외부 서비스 호출', F.purple);
+  box(620, 600, 300, 76, '결과 기록', '상태와 이력을 함께 저장', F.green);
+  box(1240, 410, 270, 76, '외부 서비스', '처리 요청 · 응답', F.yellow);
+  box(1220, 650, 310, 76, '재시도 큐', '실패한 작업만 재처리', F.red);
+  flow([[340, 188], [620, 188]]); label(475, 176, '주문 요청');
+  flow([[620, 208], [390, 208], [390, 460], [320, 460]], { color: C.blue }); label(448, 275, '주문 저장', C.blue);
+  flow([[770, 226], [770, 300]]); label(848, 268, '작업 전달');
+  flow([[770, 376], [770, 450]]); label(813, 418, '소비');
+  flow([[920, 475], [1170, 475], [1170, 448], [1240, 448]], { both: true }); label(1050, 460, '요청 / 응답');
+  flow([[770, 526], [770, 600]]); label(818, 568, '성공');
+  flow([[620, 638], [440, 638], [440, 590], [320, 590]]); label(485, 622, '결과 저장');
+  flow([[920, 505], [1150, 505], [1150, 688], [1220, 688]], { color: C.red, dash: true }); label(1070, 530, '처리 실패', C.red);
+  flow([[1375, 726], [1375, 820], [560, 820], [560, 338], [620, 338]], { color: C.gray, dash: true }); label(1000, 810, '재시도: 작업 큐로 재전달', C.gray);
+  badge(920, 600, 'T');
+  note(885, '검정 실선 = 주 흐름 · 파랑 = 주문 저장 · 빨강 점선 = 실패 · 회색 점선 = 재시도');
+  note(920, 'T = 주문 상태와 결과 이력을 같은 트랜잭션에서 저장하는 지점');
+  note(955, '가상의 설명용 예제입니다. 실제 보장 수준과 재시도 정책은 시스템 요구사항에 맞춰 작성하세요.');
+}
+try {
+  if (!window.rough) throw new Error('Rough.js를 불러오지 못했습니다. 네트워크 연결을 확인하세요.');
+  rc = rough.svg(svg);
+  scene();
+  document.documentElement.dataset.rendered = 'true';
+} catch (error) {
+  const message = document.getElementById('error');
+  message.textContent = error.message;
+  message.hidden = false;
+}
+</script>
+</body>
+</html>
