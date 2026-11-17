@@ -18,7 +18,7 @@ Claude Code와 Codex에서 함께 쓰는 스킬입니다. Rough.js + SVG로 그�
 
 <a id="예시"></a>
 
-## 🔹 예시
+## 🎨 예시
 
 [![손그림 스타일 주문 처리 흐름도: 주문 API, 작업 큐, 처리 워커, 저장소와 실패 재시도 경로](assets/flow-preview.png)](assets/flow-preview.png)
 
@@ -26,11 +26,11 @@ Claude Code와 Codex에서 함께 쓰는 스킬입니다. Rough.js + SVG로 그�
 
 <a id="설치"></a>
 
-## 🔹 설치
+## 📦 설치
 
 <a id="claude-code"></a>
 
-### 🔹 ![Claude 로고](https://img.shields.io/badge/-1864AB?style=flat-square&logo=claude&logoColor=white) Claude Code
+### 🛠️ ![Claude 로고](https://img.shields.io/badge/-D97757?style=flat-square&logo=claude&logoColor=white) Claude Code
 
 **개인 설치** · 모든 프로젝트에서 사용합니다.
 
@@ -46,7 +46,7 @@ git clone https://github.com/UjiinEatingTangerines/sketch-flow-skill.git .claude
 
 <a id="codex"></a>
 
-### 🔹 ![OpenAI 로고](assets/codex-badge.svg) Codex
+### 🛠️ ![OpenAI 로고](assets/codex-badge.svg) Codex
 
 ```sh
 git clone https://github.com/UjiinEatingTangerines/sketch-flow-skill.git ~/.codex/skills/sketch-flow
@@ -59,9 +59,9 @@ git clone https://github.com/UjiinEatingTangerines/sketch-flow-skill.git ~/.code
 
 <a id="사용"></a>
 
-## 🔹 사용
+## ✍️ 사용
 
-### 🔹 Claude Code에서 요청하기
+### 💬 Claude Code에서 요청하기
 
 ```text
 /sketch-flow 주문 API → 작업 큐 → 워커 → 저장소 흐름을 그려주세요.
@@ -69,7 +69,7 @@ git clone https://github.com/UjiinEatingTangerines/sketch-flow-skill.git ~/.code
 결과는 docs/order-flow.html에 저장해주세요.
 ```
 
-### 🔹 Codex에서 요청하기
+### 💬 Codex에서 요청하기
 
 ```text
 $sketch-flow로 주문 API → 작업 큐 → 워커 → 저장소 흐름을 그려주세요.
@@ -81,7 +81,7 @@ Claude Code의 설치 위치와 `/sketch-flow` 호출 방식은 [공식 Skills �
 
 <a id="파일-구성"></a>
 
-## 🔹 파일 구성
+## 🗂️ 파일 구성
 
 | 파일 | 용도 |
 | --- | --- |
@@ -92,7 +92,7 @@ Claude Code의 설치 위치와 `/sketch-flow` 호출 방식은 [공식 Skills �
 
 <a id="실행-환경"></a>
 
-## 🔹 실행 환경
+## ⚙️ 실행 환경
 
 별도 MCP 서버나 특정 브라우저 플러그인은 필요하지 않습니다. 에이전트가 파일을 읽고 쓰는 기능으로 HTML을 만듭니다. 브라우저 도구가 있으면 렌더링까지 검증하고, 없으면 완성된 파일을 직접 열어 확인하도록 안내합니다.
 
