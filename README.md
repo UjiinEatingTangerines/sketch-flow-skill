@@ -8,7 +8,7 @@
 
 Claude Code와 Codex에서 함께 쓰는 스킬입니다. Rough.js + SVG로 그림을 만들며, 별도 빌드 없이 브라우저에서 결과를 확인하고 HTML을 수정할 수 있습니다.
 
-[예시 보기](#예시) · [설치](#설치) · [사용법](#사용) · [파일 구성](#파일-구성) · [실행 환경](#실행-환경)
+[예시 보기](#예시) · [설치](#설치) · [사용법](#사용) · [파일 구성](#파일-구성) · [실행 환경](#실행-환경) · [외부 라이선스](#외부-라이선스)
 
 | 표현 | 역할 |
 | --- | --- |
@@ -99,4 +99,15 @@ Claude Code의 설치 위치와 `/sketch-flow` 호출 방식은 [공식 Skills �
 > [!NOTE]
 > 예제는 가상의 주문 처리 흐름입니다. Rough.js 4.6.6 CDN과 Google Fonts를 불러오므로 인터넷 연결이 필요합니다. 오프라인으로 배포하려면 라이브러리와 글꼴을 별도로 포함하세요. 자동 캡처 시에도 글꼴 로딩을 기다려야 합니다.
 
-Rough.js는 MIT, Gaegu는 SIL Open Font License로 배포되는 외부 의존성입니다. 이 저장소에는 해당 라이브러리·글꼴 파일을 포함하지 않습니다.
+<a id="외부-라이선스"></a>
+
+## 📄 외부 라이선스
+
+HTML 템플릿에서 불러오는 라이브러리와 글꼴의 라이선스입니다. 배지를 클릭하면 원문을 확인할 수 있습니다.
+
+| 구성요소 | 용도 | 라이선스 |
+| --- | --- | --- |
+| [Rough.js](https://github.com/rough-stuff/rough) | 손그림 스타일 SVG 렌더링 | [![Rough.js 라이선스: MIT](https://img.shields.io/badge/MIT-1864AB?style=flat-square)](https://github.com/rough-stuff/rough/blob/master/LICENSE) |
+| [Gaegu](https://fonts.google.com/specimen/Gaegu) | 한글 손글씨 글꼴 | [![Gaegu 라이선스: SIL OFL 1.1](https://img.shields.io/badge/SIL_OFL_1.1-1864AB?style=flat-square)](https://github.com/google/fonts/blob/main/ofl/gaegu/OFL.txt) |
+
+두 구성요소는 CDN과 Google Fonts에서 불러오며, 해당 라이브러리·글꼴 파일은 저장소에 포함하지 않습니다. 위 표는 외부 구성요소에 적용되는 라이선스를 안내합니다.
